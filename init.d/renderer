@@ -4,16 +4,17 @@
 # Required-Start:	 $local_fs $network
 # Required-Stop:
 # Default-Start:     S
-# Default-Stop:
+# Default-Stop:		 0 6
 # Short-Description: start/stop upnprenderer
 # Description:       
 ### END INIT INFO
 
+
 loglvl=0x0
-log_file="/var/run/renderer.log"
+log_file="/var/log/renderer.log"
 pid_file="/var/run/renderer.pid"
 
-run=renderer
+run=/usr/local/bin/renderer
 
 case "$1" in
   start)
