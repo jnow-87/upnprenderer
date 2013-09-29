@@ -1,1 +1,1 @@
-unsigned int loglevel = 0x0;
+unsigned int log_level = 0x0;

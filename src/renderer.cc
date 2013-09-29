@@ -30,7 +30,25 @@
 bool quit;
 cRenderer* renderer;
 
-#define DEFAULT_LOG "log"
+
+#define HELP(){ \
+	cout << "usage: " << endl; \
+	cout << "\trenderer [options]" << endl; \
+	cout << endl; \
+	cout << "options:" << endl; \
+	cout << "\t-h              : \thelp" << endl; \
+	cout << "\t-a <ip_addr>    : \tset the ip address" << endl; \
+	cout << "\t-f              : \tenable fullscreen" << endl; \
+	cout << "\t-d              : \texecute as daemon" << endl; \
+	cout << "\t-l <log_file>    : \tuse <log_file> for logging" << endl; \
+	cout << "\t-ll 0x<loglvl>  : \tuse <loglvl> for logging" << endl; \
+	cout << "\t-p <pidfile>    : \tuse <pidfile> to export pid" << endl;\
+	cout << "\t-v              : \tshow the version" << endl; \
+	exit(0); \
+}
+
+#define DEFAULT_LOG "/var/run/renderer.log"
+#define DEFAULT_PID "/var/run/renderer.pid"
 
 void shutdown() 
 {
@@ -46,8 +64,11 @@ int main(int argc, char *argv[])
 {
 	// Test, whether directory "$HOME/.renderer" exists
 	char* home=getenv("HOME");
-	char* logfile = 0;
+	char *log_file = 0, *pid_file = 0;
 	char pfad_to_renderer[100];
+	FILE* file;
+
+
 	sprintf(pfad_to_renderer,"%s/.renderer",home);
 	DIR* dir=opendir(pfad_to_renderer);
 	if(dir==NULL)
@@ -79,54 +100,31 @@ int main(int argc, char *argv[])
 			{
 				LOG(STATUS, cout << "Media Renderer 0.1.1" << endl);
 				exit(0);
-			}else if(!strcmp(optionName,"-h"))
-			{
-				// print usage
-				LOG(STATUS, cout << "usage: " << endl);
-				LOG(STATUS, cout << "\trenderer [options]" << endl);
-				LOG(STATUS, cout << endl);
-				LOG(STATUS, cout << "options:" << endl);
-				LOG(STATUS, cout << "\t-h              : \thelp" << endl);
-				LOG(STATUS, cout << "\t-a <ip_addr>    : \tset the ip address" << endl);
-				LOG(STATUS, cout << "\t-f              : \tenable fullscreen" << endl);
-				LOG(STATUS, cout << "\t-d              : \texecute as daemon" << endl);
-				LOG(STATUS, cout << "\t-l <logfile>    : \tuse <logfile> for logging" << endl);
-				LOG(STATUS, cout << "\t-ll 0x<loglvl>  : \tuse <loglvl> for logging" << endl);
-				LOG(STATUS, cout << "\t-v              : \tshow the version" << endl);
-				exit(0);
 			}
 			else if(strcmp(optionName, "-ll") == 0){
-				sscanf(argv[i + 1], "%x", &loglevel);
+				sscanf(argv[i + 1], "%x", &log_level);
 				i++;
 			}
 			else if(strcmp(optionName, "-l") == 0){
-				logfile = argv[i + 1];
+				log_file = argv[i + 1];
+				i++;
+			}
+			else if(strcmp(optionName, "-p") == 0){
+				pid_file = argv[i + 1];
 				i++;
 			}
 			else
-			{
-				// print usage
-				LOG(STATUS, cout << "usage: " << endl);
-				LOG(STATUS, cout << "\trenderer [options]" << endl);
-				LOG(STATUS, cout << "options:" << endl);
-				LOG(STATUS, cout << "\t-h              : \thelp" << endl);
-				LOG(STATUS, cout << "\t-a <ip_addr>    : \tset the ip address" << endl);
-				LOG(STATUS, cout << "\t-f              : \tenable fullscreen" << endl);
-				LOG(STATUS, cout << "\t-d              : \texecute as daemon" << endl);
-				LOG(STATUS, cout << "\t-l 0x<logfile>  : \tuse <logfile> for logging" << endl);
-				LOG(STATUS, cout << "\t-ll <loglvl>    : \tuse <loglvl> for logging" << endl);
-				LOG(STATUS, cout << "\t-v              : \tshow the version" << endl);
-				exit(0);
-			}
+				HELP()
 		}
 	}
 
-	if(logfile  == 0){
-		logfile = new char[strlen(DEFAULT_LOG) + strlen(home) + strlen(".renderer/") + 3];
-		sprintf(logfile, "%s/.renderer/%s", home, DEFAULT_LOG);
-	}
+	if(log_file  == 0)
+		log_file = DEFAULT_LOG;
 
-	printf("use \"%s\" for logging with loglevel 0x%x\n", logfile, loglevel);
+	if(pid_file == 0)
+		pid_file = DEFAULT_PID;
+
+	printf("[%s] log_file \"%s\" loglvl 0x%x pidfile \"%s\"\n", argv[0], log_file, log_level, pid_file);
 
 	if(isdaemon)
 	{
@@ -139,45 +137,38 @@ int main(int argc, char *argv[])
 		}else if(daemonpid==0)
 		{
 			int daemonfd;
-			FILE* file=fopen(logfile,"w");
+			file=fopen(log_file,"w");
 			fclose(file);
-			daemonfd=open(logfile,O_WRONLY,O_CREAT);
+			daemonfd=open(log_file,O_WRONLY,O_CREAT);
 			if(dup2(daemonfd, 1) == -1  &&  close(daemonfd) == -1)
 			{
 				perror("dup2");
 				exit(1);
 			}
-			signal(SIGTERM, onSignal);
-			signal(SIGINT, onSignal);
-			signal(SIGKILL, onSignal);
-			quit = false;
-			renderer = new cRenderer(argc,argv);
-
-			while (!quit) {
-				usleep(100000);
-			}
-			shutdown();
-			LOG(STATUS, cout << "normal beendet." << endl);
-			return 0;
 		}else
 		{
+			/* in case of parent process exit */
 			exit(0);
 		}
-	}else
-	{
-		signal(SIGTERM, onSignal);
-		signal(SIGINT, onSignal);
-		signal(SIGKILL, onSignal);
-		quit = false;
-		renderer = new cRenderer(argc,argv);
-
-		
-		//	daemon(0,0);
-		while (!quit) {
-			usleep(100000);
-		}
-		shutdown();
-		LOG(STATUS, cout << "normal beendet." << endl);
-		return 0;
 	}
+	
+	/* in case of child process or normal execution */
+	file = fopen(pid_file, "w");
+	fprintf(file, "%d", getpid());
+	fclose(file);
+
+	signal(SIGTERM, onSignal);
+	signal(SIGINT, onSignal);
+	signal(SIGKILL, onSignal);
+	quit = false;
+	renderer = new cRenderer(argc,argv);
+
+	
+	//	daemon(0,0);
+	while (!quit) {
+		usleep(100000);
+	}
+	shutdown();
+	LOG(STATUS, cout << "normal beendet." << endl);
+	return 0;
 }

@@ -2,7 +2,7 @@
 #define _LOG_H_
 
 
-enum LogLevel{
+enum log_level{
 	STATUS = 1,
 	RENDERER = 2,
 	AVTRANSPORT = 4,
@@ -12,11 +12,11 @@ enum LogLevel{
 };
 
 
-extern unsigned int loglevel;
+extern unsigned int log_level;
 
 
 #define LOG(lvl, cmd) { \
-	if(lvl & loglevel){ \
+	if(lvl & log_level){ \
 		cmd; \
 	} \
 }
