@@ -38,7 +38,7 @@ build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
+	$(top_srcdir)/configure AUTHORS COPYING INSTALL \
 	TODO acconfig.h config.guess config.sub depcomp install-sh \
 	ltmain.sh missing
 subdir = .
@@ -203,10 +203,7 @@ rendererdoc_DATA = \
 	README\
 	COPYING\
 	AUTHORS\
-	ChangeLog\
-	INSTALL\
-	NEWS\
-	TODO
+	INSTALL
 
 EXTRA_DIST = $(rendererdoc_DATA)
 all: config.h

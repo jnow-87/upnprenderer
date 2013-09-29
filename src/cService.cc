@@ -19,6 +19,7 @@
  */
 
 
+#include <string.h>
 #include "cService.h"
 #include "cRenderer.h"
 

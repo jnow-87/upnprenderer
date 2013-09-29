@@ -10,10 +10,7 @@ rendererdoc_DATA = \
 	README\
 	COPYING\
 	AUTHORS\
-	ChangeLog\
-	INSTALL\
-	NEWS\
-	TODO
+	INSTALL
 
 EXTRA_DIST = $(rendererdoc_DATA)
 

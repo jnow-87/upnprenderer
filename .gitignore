@@ -1,2 +1,10 @@
 *.o
 *.d
+*.log
+*.status
+Makefile
+libtool
+config.h
+stamp-h1
+renderer
+.deps

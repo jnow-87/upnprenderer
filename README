@@ -1,3 +1,3 @@
 prerequisite
 
-	libupnp, libuuid1, uuid-dev, libixml
+	libupnp, libupnp-dev, uuid-dev, libuuid1

@@ -28,5 +28,5 @@ renderer_SOURCES = \
 renderer_LDFLAGS = 
 
 renderer_LDADD = \
-	 -lupnp -luuid
+	 -lupnp -luuid -lpthread -lixml
 
