@@ -21,6 +21,7 @@
 #include <string.h>
 #include "cAVTransport.h"
 #include "cRenderer.h"
+#include "log.h"
 
 cAVTransport::cAVTransport(void* lnkcRenderer) :cService(lnkcRenderer)
 {
@@ -183,20 +184,20 @@ int cAVTransport::SetAVTransportURI(IXML_Document* in, IXML_Document** out, Upnp
 {	
 	setVar(AV_id,1,AV_AVTransportURI,getXMLValue(in, "CurrentURI"));
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
-	cout << "set TransportURI to: " << this->value[cAVTransport::AV_AVTransportURI] << "!" << endl;
-	//cout << "metadata #####################################" << ixmlPrintDocument(in) << "############################################################" << endl;
+
+	LOG(AVTRANSPORT, cout << "set TransportURI to: " << this->value[cAVTransport::AV_AVTransportURI] << "!" << endl);
 	return 0;
 }
 
 int cAVTransport::SetNextAVTransportURI(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "SetNextAVTransportURI: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "SetNextAVTransportURI: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 int cAVTransport::GetMediaInfo(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetMediaInfo: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetMediaInfo: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"NrTracks",this->value[AV_NumberOfTracks]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"MediaDuration",this->value[AV_CurrentMediaDuration]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"CurrentURI",this->value[AV_AVTransportURI]);
@@ -211,7 +212,7 @@ int cAVTransport::GetMediaInfo(IXML_Document* in, IXML_Document** out, Upnp_Acti
 
 int cAVTransport::GetTransportInfo(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetTransportInfo: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetTransportInfo: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"CurrentTransportState",this->value[AV_TransportState]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"CurrentTransportStatus",this->value[AV_TransportStatus]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"CurrentSpeed",this->value[AV_TransportPlaySpeed]);
@@ -220,7 +221,7 @@ int cAVTransport::GetTransportInfo(IXML_Document* in, IXML_Document** out, Upnp_
 
 int cAVTransport::GetPositionInfo(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetPositionInfo "  << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetPositionInfo "  << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"Track",this->value[AV_CurrentTrack]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"TrackDuration",this->value[AV_CurrentTrackDuration]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"TrackMetaData",this->value[AV_CurrentTrackMetaData]);
@@ -234,7 +235,7 @@ int cAVTransport::GetPositionInfo(IXML_Document* in, IXML_Document** out, Upnp_A
 
 int cAVTransport::GetDeviceCapabilities(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetDeviceCapabilities" << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetDeviceCapabilities" << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"PlayMedia",this->value[AV_PossiblePlaybackStorageMedia]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"RecMedia",this->value[AV_PossibleRecordStorageMedia]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"RecQualityModes",this->value[AV_PossibleRecordQualityModes]);
@@ -243,7 +244,7 @@ int cAVTransport::GetDeviceCapabilities(IXML_Document* in, IXML_Document** out, 
 
 int cAVTransport::GetTransportSettings(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetTransportSettings: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetTransportSettings: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"PlayMode",this->value[AV_CurrentPlayMode]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"RecQualityMode",this->value[AV_CurrentRecordQualityMode]);
 	return 0;
@@ -251,11 +252,11 @@ int cAVTransport::GetTransportSettings(IXML_Document* in, IXML_Document** out, U
 
 int cAVTransport::Stop(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Stop: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Stop: " << in << std::endl);
 	if (strcmp(this->value[cAVTransport::AV_TransportState],"PAUSED_PLAYBACK") == 0
 		||
 		strcmp(this->value[cAVTransport::AV_TransportState],"PLAYING") == 0) {
-		cout << "unpause!" << endl;
+		LOG(AVTRANSPORT, cout << "unpause!" << endl);
 		((cRenderer*)lnkcRenderer)->mplayer_cmd("quit",false);
 		setVar(AV_id,1,cAVTransport::AV_TransportState,"STOPPED");
 		((cRenderer*)lnkcRenderer)->mplayer_is_running = false;
@@ -268,12 +269,12 @@ int cAVTransport::Play(IXML_Document* in, IXML_Document** out, Upnp_Action_Reque
 {
 	if (!strcmp("STOPPED",this->value[cAVTransport::AV_TransportState])) {
 		if (strlen(this->value[cAVTransport::AV_AVTransportURI])) {
-			cout << "play!" << endl;
+			LOG(AVTRANSPORT, cout << "play!" << endl);
 			((cRenderer*)lnkcRenderer)->mplayer_start();
 
 		}
 	} else if (!strcmp(this->value[cAVTransport::AV_TransportState],"PAUSED_PLAYBACK")) {
-		cout << "unpause!" << endl;
+		LOG(AVTRANSPORT, cout << "unpause!" << endl);
 		((cRenderer*)lnkcRenderer)->mplayer_cmd("pause",false);
 		setVar(AV_id,1,cAVTransport::AV_TransportState,"PLAYING");
 	}
@@ -283,13 +284,13 @@ int cAVTransport::Play(IXML_Document* in, IXML_Document** out, Upnp_Action_Reque
 
 int cAVTransport::Pause(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Pause: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Pause: " << in << std::endl);
 	if (strcmp(this->value[cAVTransport::AV_TransportState],"PLAYING") == 0) {
-		cout << "pause!" << endl;
+		LOG(AVTRANSPORT, cout << "pause!" << endl);
 		setVar(AV_id,1,cAVTransport::AV_TransportState,"PAUSED_PLAYBACK");
 		((cRenderer*)lnkcRenderer)->mplayer_cmd("pause",false);
 	} else if (strcmp(this->value[cAVTransport::AV_TransportState],"PAUSED_PLAYBACK") == 0) {
-		cout << "unpause!" << endl;
+		LOG(AVTRANSPORT, cout << "unpause!" << endl);
 		((cRenderer*)lnkcRenderer)->mplayer_cmd("pause",false);
 		setVar(AV_id,1,cAVTransport::AV_TransportState,"PLAYING");
 	}
@@ -299,14 +300,14 @@ int cAVTransport::Pause(IXML_Document* in, IXML_Document** out, Upnp_Action_Requ
 
 int cAVTransport::Record(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Record: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Record: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 
 int cAVTransport::Seek(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Seek: " << ixmlPrintDocument(in) << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Seek: " << ixmlPrintDocument(in) << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	if (strcmp(getXMLValue(in, "Unit"),"REL_TIME")==0) {
 		//postition2seek setzen
@@ -320,35 +321,35 @@ int cAVTransport::Seek(IXML_Document* in, IXML_Document** out, Upnp_Action_Reque
 
 int cAVTransport::Next(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Next: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Next: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 
 int cAVTransport::Previous(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "Previous: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "Previous: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 
 int cAVTransport::SetPlayMode(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "SetPlayMode: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "SetPlayMode: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 
 int cAVTransport::SetRecordQualityMode(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "SetRecordQualityMode: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "SetRecordQualityMode: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 
 int cAVTransport::GetCurrentTransportActions(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	std::cout << "GetCurrentTransportActions: " << in << std::endl;
+	LOG(AVTRANSPORT, std::cout << "GetCurrentTransportActions: " << in << std::endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,this->service_id,"Actions",this->value[AV_CurrentTransportActions]);
 	return 0;
 }

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <fstream>
 #include "cRenderer.h"
+#include "log.h"
 
 bool file_exists(char* filename)
 {
@@ -76,48 +77,36 @@ cRenderer::cRenderer(int argc,char* argv[])
 		web_root="/usr/share/renderer";
 	}else
 	{
-		cout << "couldn't find description file." << endl;
-		cout << "make sure you have run make install." << endl;
+		LOG(RENDERER, cout << "couldn't find description file." << endl);
+		LOG(RENDERER, cout << "make sure you have run make install." << endl);
 		exit(1);
 	}
 	
 	//SDK-Initialisierung
 	if(ip_addr==NULL)
 	{
-		cout << "random ip" << endl;
+		LOG(RENDERER, cout << "random ip" << endl);
 	}else
 	{
-		cout << ip_addr << endl;
+		LOG(RENDERER, cout << ip_addr << endl);
 	}
 	int err;
 	err = UpnpInit( ip_addr , 0 );
 	if ( err != UPNP_E_SUCCESS ) {
-		cout << "couldn't init SDK: " << UpnpGetErrorMessage(err) << endl;
+		LOG(RENDERER, cout << "couldn't init SDK: " << UpnpGetErrorMessage(err) << endl);
 		UpnpFinish();
 		exit(1);
 	}
 	if (UpnpSetWebServerRootDir(web_root) != UPNP_E_SUCCESS) {
-		cout << "couldn't set web server's root dir." << endl;
+		LOG(RENDERER, cout << "couldn't set web server's root dir." << endl);
 		UpnpFinish();
 		exit(1);
 	}
-/*	
-	char tmp[256];
-	sprintf(tmp, "http://%s:%i/AVRendererDesc.xml", UpnpGetServerIpAddress(), UpnpGetServerPort());
-	err = UpnpRegisterRootDevice(tmp, callbackEventHandler, NULL, &renderer_hdl);
-	if ( err != UPNP_E_SUCCESS) {
-		cout << "couldn't register root device: " << err << endl;
-		UpnpFinish();
-		exit(1);
-	}		
-	cout << "SDK intitalized and device registered: (" << tmp << ")." << endl;
-*/
 
 	
 	IXML_Document* desc = getDescriptionDoc();
 	string str = ixmlPrintDocument(desc);
 	int lng = str.length();
-//	cout << ixmlPrintDocument(desc) << endl;
 	err = UpnpRegisterRootDevice2(	UPNPREG_BUF_DESC,
 									str.c_str(),
 									lng,
@@ -127,19 +116,19 @@ cRenderer::cRenderer(int argc,char* argv[])
 									&renderer_hdl
 								 );
 	if ( err != UPNP_E_SUCCESS) {
-		cout << "couldn't register root device: " << UpnpGetErrorMessage(err) << endl;
+		LOG(RENDERER, cout << "couldn't register root device: " << UpnpGetErrorMessage(err) << endl);
 		UpnpFinish();
 		exit(1);
 	}		
-	cout << "SDK intitalized and device registered." << endl;
+	LOG(RENDERER, cout << "SDK intitalized and device registered." << endl);
 
 	// Advertisement
 	if (UpnpSendAdvertisement(renderer_hdl, 1000) != UPNP_E_SUCCESS) {
-		cout << "couldn't advertise device" << endl;
+		LOG(RENDERER, cout << "couldn't advertise device" << endl);
 		UpnpFinish();
 		exit(1);
 	}		
-	cout << "device advertised." << endl;
+	LOG(RENDERER, cout << "device advertised." << endl);
 }
 
 
@@ -152,21 +141,21 @@ cRenderer::~cRenderer()
 	ithread_mutex_destroy(&outputMutex);
 	if (strcmp("STOPPED",services[AVTransport]->value[cAVTransport::AV_TransportState]))
 	{
-		cout << "mplayer is quitting" << endl;
+		LOG(RENDERER, cout << "mplayer is quitting" << endl);
 		char* test="quit\n";
 		write(PARENT_WRITE,test,strlen(test));
 	} else {
-		cout << "mplayer is already exited" << endl;
+		LOG(RENDERER, cout << "mplayer is already exited" << endl);
 	}
 	int err;
 	err=UpnpUnRegisterRootDevice(renderer_hdl);
 	if (err != UPNP_E_SUCCESS) {
-		cout << "couldn't unregister root device:" << err << endl;
+		LOG(RENDERER, cout << "couldn't unregister root device:" << err << endl);
 		UpnpFinish();
 		exit(1);
 	}		
 	if (UpnpFinish() != UPNP_E_SUCCESS) {
-		cout << "couldn't finish" << endl;
+		LOG(RENDERER, cout << "couldn't finish" << endl);
 		exit(1);
 	}
 }
@@ -178,7 +167,7 @@ cRenderer::~cRenderer()
 void cRenderer::handleActionRequest(Upnp_Action_Request *Event)
 {
 	ithread_mutex_lock(&rendererMutex);
-	cout << ixmlPrintDocument(Event->ActionRequest) << endl;	
+	LOG(RENDERER, cout << ixmlPrintDocument(Event->ActionRequest) << endl;)	
 	if( (strcmp(Event->ServiceID,services[RenderingControl]->service_id)==0)&&
 		(strcmp(Event->DevUDN,udn)==0)){
 		for(int i=0;i<services[RenderingControl]->action_count;i++){
@@ -208,7 +197,7 @@ void cRenderer::handleActionRequest(Upnp_Action_Request *Event)
 			}						   
 		}
 	}else{
-		cout << "service false" << endl;
+		LOG(RENDERER, cout << "service false" << endl);
 		return;
 	}
 	
@@ -223,13 +212,13 @@ void cRenderer::handleSubscriptionRequest(Upnp_Subscription_Request* Event)
 	ithread_mutex_lock(&rendererMutex);
 	int err = 254;
 	if (!strcmp("urn:upnp-org:serviceId:RenderingControl1",Event->ServiceId)) {
-		cout << "subscription of service RenderingControl1 requested" << endl;
+		LOG(RENDERER, cout << "subscription of service RenderingControl1 requested" << endl);
 		char* evRC_name[1];
 		char* evRC_value[1];
 		evRC_name[0]=services[RenderingControl]->name[cRenderingControl::RC_LastChange] ;
 		evRC_value[0]=services[RenderingControl]->value[cRenderingControl::RC_LastChange] ;
 		
-		cout << evRC_name[0] << endl;
+		LOG(RENDERER, cout << evRC_name[0] << endl);
 		err = UpnpAcceptSubscription(renderer_hdl,
 								Event->UDN,
 								Event->ServiceId,
@@ -237,11 +226,11 @@ void cRenderer::handleSubscriptionRequest(Upnp_Subscription_Request* Event)
 								(const char **) evRC_value,
 								1,
 								Event->Sid);
-		cout << "nach accept" << endl;
+		LOG(RENDERER, cout << "nach accept" << endl);
 		(services[RenderingControl])->setVar(RenderingControl,1,cRenderingControl::RC_Volume,services[RenderingControl]->value[cRenderingControl::RC_Volume]);
 
 	} else if (!strcmp("urn:upnp-org:serviceId:ConnectionManager1",Event->ServiceId)) {
-		cout << "subscription of service ConnectionManager1 requested" << endl;
+		LOG(RENDERER, cout << "subscription of service ConnectionManager1 requested" << endl);
 		char* evCM_name[3];
 		char* evCM_value[3];
 		
@@ -261,7 +250,7 @@ void cRenderer::handleSubscriptionRequest(Upnp_Subscription_Request* Event)
 								3, // muss noch korrigiert werden
 								Event->Sid);
 	} else if (!strcmp("urn:upnp-org:serviceId:AVTransport1",Event->ServiceId)) {
-		cout << "subscription of service AVTransport1 requested" << endl;
+		LOG(RENDERER, cout << "subscription of service AVTransport1 requested" << endl);
 		char* evAV_name[1];
 		char* evAV_value[1];
 		evAV_name[0]=services[AVTransport]->name[cAVTransport::AV_LastChange];
@@ -274,13 +263,10 @@ void cRenderer::handleSubscriptionRequest(Upnp_Subscription_Request* Event)
 								1,
 								Event->Sid);
 	} else {		
-		cout << "subscription of uncatched service " <<
-				Event->ServiceId <<
-				" requested" <<
-		endl;
+		LOG(RENDERER, cout << "subscription of uncatched service " << Event->ServiceId <<" requested" <<	endl);
 	}
-	cout << "accepted? " << Event->ServiceId << " " ;	
-	cout << " - err: " << err << endl;
+	LOG(RENDERER, cout << "accepted? " << Event->ServiceId << " " );
+	LOG(RENDERER, cout << " - err: " << err << endl);
 
 	
 	ithread_mutex_unlock(&rendererMutex);
@@ -292,13 +278,7 @@ void cRenderer::handleGetVarRequest(Upnp_State_Var_Request* Event)
 {
 	ithread_mutex_lock(&rendererMutex);
 	
-	cout << "get var requested:" << 
-			Event->DevUDN <<
-			Event->ServiceID <<
-			Event->StateVarName <<
-//			Event->CtrlPtIPAddr <<
-			Event->CurrentVal <<
-	endl;
+	LOG(RENDERER, cout << "get var requested:" << 	Event->DevUDN <<	Event->ServiceID <<			Event->StateVarName << 			Event->CurrentVal << 	endl);
 	
 	ithread_mutex_unlock(&rendererMutex);
 }
@@ -311,7 +291,7 @@ void cRenderer::handleGetVarRequest(Upnp_State_Var_Request* Event)
 int cRenderer::callbackEventHandler(Upnp_EventType EventType, void *Event, void *Cookie)
 {
 	cRenderer *cp = (cRenderer*) pt2obj;
-	cout << "cp->UDN " << cp->udn << endl;
+	LOG(RENDERER, cout << "cp->UDN " << cp->udn << endl);
 
 	switch (EventType) {
 		case UPNP_CONTROL_ACTION_REQUEST: { /* Received by a device when a control point issues a control request. */
@@ -328,7 +308,7 @@ int cRenderer::callbackEventHandler(Upnp_EventType EventType, void *Event, void 
 			break; 
 		}
 		default: {
-			cout << "uncatched Event: " << EventType << endl;
+			LOG(RENDERER, cout << "uncatched Event: " << EventType << endl);
 			break;
 		}
 	}
@@ -341,7 +321,7 @@ int cRenderer::callbackEventHandler(Upnp_EventType EventType, void *Event, void 
 char* cRenderer::mplayer_cmd(char command[],bool output)
 {
 	//ithread_mutex_lock(&outputMutex);
-	cout << services[AVTransport]->value[cAVTransport::AV_TransportState] << endl;
+	LOG(RENDERER, cout << services[AVTransport]->value[cAVTransport::AV_TransportState] << endl);
 	if (strcmp(services[AVTransport]->value[cAVTransport::AV_TransportState],"STOPPED")!=0) {
 		char cmd[100];
 		sprintf(cmd,"%s\n",command);
@@ -349,14 +329,12 @@ char* cRenderer::mplayer_cmd(char command[],bool output)
 		if(output)
 		{
 			string out = this->showOutput();
-			cout << "answer from mplayer: " <<
-				out  << endl << "===============================================" <<
-				endl;
+			LOG(RENDERER, cout << "answer from mplayer: " << 				out  << endl << "===============================================" << 				endl);
 			return (char*)out.c_str();
 		}
 		return "";
 	} else {
-		cout << "mplayer not running!" << endl;
+		LOG(RENDERER, cout << "mplayer not running!" << endl);
 		return "";
 	}		
 }
@@ -387,7 +365,7 @@ void cRenderer::wakeup(int in)
 									ixmlPrintDocument(LCdoc)
 		); 
 		UpnpNotifyExt(cp->renderer_hdl,cp->udn,cp->services[AVTransport]->service_id,myDoc2);
-		cout << "SIGCHLD" << endl;
+		LOG(RENDERER, cout << "SIGCHLD" << endl);
 	}
 }
 
@@ -404,13 +382,13 @@ int cRenderer::mypopen(char* uri)
 	if ( pipe(readpipe) < 0  ||  pipe(writepipe) < 0 || pipe(errpipe) < 0 )
 	{
 		/* FATAL: cannot create pipe */
-		cout << "cannot create pipe" << endl;
+		LOG(RENDERER, cout << "cannot create pipe" << endl);
 	}
 	
 	if ( (childpid = fork()) < 0)
 	{
 		/* FATAL: cannot fork child */
-		cout << "cannot fork child" << endl;
+		LOG(RENDERER, cout << "cannot fork child" << endl);
 	}
 	else if ( childpid == 0 )	/* in the child */
 	{
@@ -503,11 +481,11 @@ int cRenderer::mypopen(char* uri)
 		char * line = NULL;
     		size_t len = 0;
 		getline(&line,&len,readfp);
-		cout << line << endl;
+		LOG(RENDERER, cout << line << endl);
 		while(strcmp(line,"Starting playback...\n")!=0)
 		{
 			getline(&line,&len,readfp);
-			cout << line << endl;
+			LOG(RENDERER, cout << line << endl);
 			if(strstr(line,"Exiting... (End of file)")!=NULL)
 			{
 				wait(0);
@@ -522,7 +500,7 @@ int cRenderer::mypopen(char* uri)
 				cAVTransport::AV_CurrentTrackURI,(services[AVTransport])->value[cAVTransport::AV_AVTransportURI],
 				cAVTransport::AV_CurrentTrackMetaData,"",
 				cAVTransport::AV_AbsoluteTimePosition,(services[AVTransport])->value[cAVTransport::AV_AbsoluteTimePosition]);
-		cout << "raus" << endl;
+		LOG(RENDERER, cout << "raus" << endl);
 		if(line)
 		{
 			free(line);
@@ -539,7 +517,7 @@ int cRenderer::mypopen(char* uri)
 					string tmp = mplayer_cmd("get_time_length",true);
 					tmp = tmp.substr(tmp.find_first_of('=')+1);
 					seconds2tstamp(tstamp,(char* )tmp.c_str());
-					cout << tstamp << "###############################\n########" << endl;
+					LOG(RENDERER, cout << tstamp << "###############################\n########" << endl);
 					if (strcmp(tmp.c_str(),"00.0")!=0) {
 		//				setVar(AV_id,2,cAVTransport::AV_CurrentTrackDuration,"99:59:59");
 						(services[AVTransport])->setVar(AVTransport,2,cAVTransport::AV_CurrentTrackDuration,"NOT_IMPLEMENTED");
@@ -556,7 +534,7 @@ int cRenderer::mypopen(char* uri)
 					strcpy(returnvalue,length.c_str());
 					char tstamp[20];
 					seconds2tstamp(tstamp,returnvalue);
-					cout <<  tstamp  << endl;
+					LOG(RENDERER, cout <<  tstamp  << endl);
 					(services[AVTransport])->setVar(AVTransport,2,cAVTransport::AV_RelativeTimePosition,tstamp);
 				}
 			}
@@ -601,15 +579,15 @@ string cRenderer::showOutput()
 	}*/
 	if(readfp==NULL)
 	{
-		cout << "readfp is NULL (error)" << endl;
+		LOG(RENDERER, cout << "readfp is NULL (error)" << endl);
 		exit(1);
 	}
 	getline(&line,&len,readfp);
-	cout << line << endl;
+	LOG(RENDERER, cout << line << endl);
 	while(strstr(line,"ANS_LENGTH=")==NULL && strstr(line,"ANS_TIME_POSITION=")==NULL)
 	{
 		getline(&line,&len,readfp);
-		cout << line << endl;
+		LOG(RENDERER, cout << line << endl);
 	}
 	returnvalue=line;
 	if(line)
@@ -680,10 +658,10 @@ void cRenderer::parseConfigFile()
 	sprintf(home_conf,"%s/.renderer/renderer.conf",home);
 	myfile.open(home_conf,ifstream::in);
 	if (myfile.is_open()) {
-		cout << "using config " << home_conf << endl;
+		LOG(RENDERER, cout << "using config " << home_conf << endl);
 	} else {
-		cout << "config not found" << endl;
-		cout << "generating config" << endl;
+		LOG(RENDERER, cout << "config not found" << endl);
+		LOG(RENDERER, cout << "generating config" << endl);
 		FILE* file=fopen(home_conf,"w");
 		fputs("#This file is automatically created\n\n",file);
 		fputs("#Set a friendly name for your renderer\n",file);
@@ -946,7 +924,7 @@ char* cRenderer::get_uuid()
 	}
 	
 	uuid_in.close();
-	cout << "alt: " << uuid << endl;
+	LOG(RENDERER, cout << "alt: " << uuid << endl);
 	return strdup(uuid);
 
 }
@@ -965,10 +943,10 @@ char* cRenderer::generate_uuid()
 	ofstream uuid_out;
 	uuid_out.open(pfad_to_uuid,ofstream::out);
 	if (!uuid_out.is_open())
-		cout << "couldn't open uuidfile" << endl;
+		LOG(RENDERER, cout << "couldn't open uuidfile" << endl);
 	uuid_out.write(uuid,strlen(uuid));
 	uuid_out.close();
-	cout << "neu: " << uuid << endl;
+	LOG(RENDERER, cout << "neu: " << uuid << endl);
 	return strdup(uuid);
 }
 

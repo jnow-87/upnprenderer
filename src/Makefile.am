@@ -23,7 +23,8 @@ renderer_SOURCES = \
 	cRenderer.cc\
 	cRenderingControl.cc\
 	cService.cc\
-	renderer.cc
+	renderer.cc\
+	log.cc
 
 renderer_LDFLAGS = 
 

@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "cRenderer.h"
+#include "log.h"
 
 bool quit;
 cRenderer* renderer;
@@ -52,11 +53,11 @@ int main(int argc, char *argv[])
 	if(dir==NULL)
 	{
 		mkdir(pfad_to_renderer,0100755);
-		cout << "Generating directory: " << pfad_to_renderer << endl; 
+		LOG(STATUS, cout << "Generating directory: " << pfad_to_renderer << endl); 
 	}else
 	{
 		closedir(dir);
-		cout << "Directory(" << pfad_to_renderer << ") exists." << endl;
+		LOG(STATUS, cout << "Directory(" << pfad_to_renderer << ") exists." << endl);
 	}
 	
 	bool isdaemon=false;
@@ -76,39 +77,45 @@ int main(int argc, char *argv[])
 				isdaemon=true;
 			}else if(!strcmp(optionName,"-v"))
 			{
-				cout << "Media Renderer 0.1.1" << endl;
+				LOG(STATUS, cout << "Media Renderer 0.1.1" << endl);
 				exit(0);
 			}else if(!strcmp(optionName,"-h"))
 			{
 				// print usage
-				cout << "usage: " << endl;
-				cout << "\trenderer [options]" << endl;
-				cout << endl;
-				cout << "options:" << endl;
-				cout << "\t-h           : \thelp" << endl;
-				cout << "\t-a <ip_addr> : \tset the ip address" << endl;
-				cout << "\t-f           : \tenable fullscreen" << endl;
-				cout << "\t-d           : \texecute as daemon" << endl;
-				cout << "\t-l <logfile> : \tuse <logfile> for logging" << endl;
-				cout << "\t-v           : \tshow the version" << endl;
+				LOG(STATUS, cout << "usage: " << endl);
+				LOG(STATUS, cout << "\trenderer [options]" << endl);
+				LOG(STATUS, cout << endl);
+				LOG(STATUS, cout << "options:" << endl);
+				LOG(STATUS, cout << "\t-h              : \thelp" << endl);
+				LOG(STATUS, cout << "\t-a <ip_addr>    : \tset the ip address" << endl);
+				LOG(STATUS, cout << "\t-f              : \tenable fullscreen" << endl);
+				LOG(STATUS, cout << "\t-d              : \texecute as daemon" << endl);
+				LOG(STATUS, cout << "\t-l <logfile>    : \tuse <logfile> for logging" << endl);
+				LOG(STATUS, cout << "\t-ll 0x<loglvl>  : \tuse <loglvl> for logging" << endl);
+				LOG(STATUS, cout << "\t-v              : \tshow the version" << endl);
 				exit(0);
 			}
+			else if(strcmp(optionName, "-ll") == 0){
+				sscanf(argv[i + 1], "%x", &loglevel);
+				i++;
+			}
 			else if(strcmp(optionName, "-l") == 0){
-				logfile = argv[i+1];
+				logfile = argv[i + 1];
 				i++;
 			}
 			else
 			{
 				// print usage
-				cout << "usage: " << endl;
-				cout << "\trenderer [options]" << endl;
-				cout << "options:" << endl;
-				cout << "\t-h           : \thelp" << endl;
-				cout << "\t-a <ip_addr> : \tset the ip address" << endl;
-				cout << "\t-f           : \tenable fullscreen" << endl;
-				cout << "\t-d           : \texecute as daemon" << endl;
-				cout << "\t-l <logfile> : \tuse <logfile> for logging" << endl;
-				cout << "\t-v           : \tshow the version" << endl;
+				LOG(STATUS, cout << "usage: " << endl);
+				LOG(STATUS, cout << "\trenderer [options]" << endl);
+				LOG(STATUS, cout << "options:" << endl);
+				LOG(STATUS, cout << "\t-h              : \thelp" << endl);
+				LOG(STATUS, cout << "\t-a <ip_addr>    : \tset the ip address" << endl);
+				LOG(STATUS, cout << "\t-f              : \tenable fullscreen" << endl);
+				LOG(STATUS, cout << "\t-d              : \texecute as daemon" << endl);
+				LOG(STATUS, cout << "\t-l 0x<logfile>  : \tuse <logfile> for logging" << endl);
+				LOG(STATUS, cout << "\t-ll <loglvl>    : \tuse <loglvl> for logging" << endl);
+				LOG(STATUS, cout << "\t-v              : \tshow the version" << endl);
 				exit(0);
 			}
 		}
@@ -119,6 +126,8 @@ int main(int argc, char *argv[])
 		sprintf(logfile, "%s/.renderer/%s", home, DEFAULT_LOG);
 	}
 
+	printf("use \"%s\" for logging with loglevel 0x%x\n", logfile, loglevel);
+
 	if(isdaemon)
 	{
 		signal(SIGCHLD,SIG_IGN);
@@ -126,7 +135,7 @@ int main(int argc, char *argv[])
 		if ( (daemonpid = fork()) < 0)
 		{
 			// FATAL: cannot fork child 
-			cout << "cannot fork child" << endl;
+			LOG(STATUS, cout << "cannot fork child" << endl);
 		}else if(daemonpid==0)
 		{
 			int daemonfd;
@@ -148,7 +157,7 @@ int main(int argc, char *argv[])
 				usleep(100000);
 			}
 			shutdown();
-			cout << "normal beendet." << endl;
+			LOG(STATUS, cout << "normal beendet." << endl);
 			return 0;
 		}else
 		{
@@ -168,7 +177,7 @@ int main(int argc, char *argv[])
 			usleep(100000);
 		}
 		shutdown();
-		cout << "normal beendet." << endl;
+		LOG(STATUS, cout << "normal beendet." << endl);
 		return 0;
 	}
 }

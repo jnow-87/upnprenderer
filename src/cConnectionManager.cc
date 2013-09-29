@@ -21,6 +21,7 @@
 
 #include "cConnectionManager.h"
 #include "cRenderer.h"
+#include "log.h"
 
 cConnectionManager::cConnectionManager(void* lnkcRenderer) :cService(lnkcRenderer)
 {
@@ -93,14 +94,14 @@ int cConnectionManager::callAction(int i, IXML_Document* in, IXML_Document** out
  */
 int cConnectionManager::GetProtocolInfo(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	cout << "GetProtocolInfo: " << in << endl;
+	LOG(CONNECTION, cout << "GetProtocolInfo: " << in << endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"Source",value[CM_SourceProtocolInfo]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"Sink",value[CM_SinkProtocolInfo]);
 	return 0;
 }
 int cConnectionManager::PrepareForConnection(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	cout << "PrepareForConnection: " << in << endl;
+	LOG(CONNECTION, cout << "PrepareForConnection: " << in << endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"ConnectionID",value[CM_A_ARG_TYPE_ConnectionID]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"AVTransportID",value[CM_A_ARG_TYPE_AVTransportID]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"RcsID",value[CM_A_ARG_TYPE_RcsID]);
@@ -108,19 +109,19 @@ int cConnectionManager::PrepareForConnection(IXML_Document* in, IXML_Document** 
 }
 int cConnectionManager::ConnectionComplete(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	cout << "ConnectionComplete: " << in << endl;
+	LOG(CONNECTION, cout << "ConnectionComplete: " << in << endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,NULL,NULL);
 	return 0;
 }
 int cConnectionManager::GetCurrentConnectionIDs(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	cout << "GetCurrentConnectionIDs: " << in << endl;
+	LOG(CONNECTION, cout << "GetCurrentConnectionIDs: " << in << endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"ConnectionIDs",value[CM_CurrentConnectionIDs]);
 	return 0;
 }
 int cConnectionManager::GetCurrentConnectionInfo(IXML_Document* in, IXML_Document** out, Upnp_Action_Request* Event)
 {
-	cout << "GetCurrentConnectionInfo: " << in << endl;
+	LOG(CONNECTION, cout << "GetCurrentConnectionInfo: " << in << endl);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"ProtocolInfo",value[CM_A_ARG_TYPE_ProtocolInfo]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"RcsID",value[CM_A_ARG_TYPE_RcsID]);
 	UpnpAddToActionResponse(&Event->ActionResult,Event->ActionName,service_id,"AVTransportID",value[CM_A_ARG_TYPE_AVTransportID]);

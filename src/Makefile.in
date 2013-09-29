@@ -53,7 +53,7 @@ PROGRAMS = $(bin_PROGRAMS)
 am_renderer_OBJECTS = cAVTransport.$(OBJEXT) \
 	cConnectionManager.$(OBJEXT) cRenderer.$(OBJEXT) \
 	cRenderingControl.$(OBJEXT) cService.$(OBJEXT) \
-	renderer.$(OBJEXT)
+	renderer.$(OBJEXT) log.$(OBJEXT)
 renderer_OBJECTS = $(am_renderer_OBJECTS)
 renderer_DEPENDENCIES =
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -203,7 +203,8 @@ renderer_SOURCES = \
 	cRenderer.cc\
 	cRenderingControl.cc\
 	cService.cc\
-	renderer.cc
+	renderer.cc\
+	log.cc
 
 renderer_LDFLAGS = 
 renderer_LDADD = \

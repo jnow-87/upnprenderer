@@ -22,6 +22,7 @@
 #include <string.h>
 #include "cService.h"
 #include "cRenderer.h"
+#include "log.h"
 
 cService::cService(void* lnkcRenderer)
 {
@@ -67,7 +68,7 @@ void cService::setVar(int service, int count, ...)
 		char* newvalue=va_arg(list,char*);
 		// Wert setzen
 		this->value[_name] = newvalue;
-		cout << "## SETVAR: " << this->name[_name] << ": " << this->value[_name] << endl;
+		LOG(SERVICE, cout << "## SETVAR: " << this->name[_name] << ": " << this->value[_name] << endl);
 		
 		IXML_Element* Ele2 = NULL;
 		Ele2 = ixmlDocument_createElement(LCdoc, this->name[_name]);
@@ -85,7 +86,7 @@ void cService::setVar(int service, int count, ...)
 								"LastChange",
 								ixmlPrintDocument(LCdoc)
 	); 
-	//cout << ixmlPrintDocument(myDoc2) << endl;
+	//LOG(SERVICE, cout << ixmlPrintDocument(myDoc2) << endl);
 	int e=UpnpNotifyExt(((cRenderer*)lnkcRenderer)->renderer_hdl,((cRenderer*)lnkcRenderer)->udn,this->service_id,myDoc2);
 
 }
