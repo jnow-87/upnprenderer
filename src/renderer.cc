@@ -47,7 +47,7 @@ cRenderer* renderer;
 	exit(0); \
 }
 
-#define DEFAULT_LOG "/var/run/renderer.log"
+#define DEFAULT_LOG "/var/log/renderer.log"
 #define DEFAULT_PID "/var/run/renderer.pid"
 
 void shutdown() 
