@@ -1,0 +1,37 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          upnprenderer
+# Required-Start:	 $local_fs $network
+# Required-Stop:
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: start/stop upnprenderer
+# Description:       
+### END INIT INFO
+
+loglvl=0x0
+log_file="/var/run/renderer.log"
+pid_file="/var/run/renderer.pid"
+
+run=renderer
+
+case "$1" in
+  start)
+  	echo "starting upnprenderer"
+	$run -l $log_file -ll $loglvl -p $pid_file -d
+	;;
+  stop)
+  	kill -9 $(cat $pid_file)
+	;;
+  restart)
+  	$0 stop
+	$0 start
+  ;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "$0 operation not implemented \"$1\"" >&2
+	exit 1
+	;;
+esac
+
+:
