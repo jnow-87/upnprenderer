@@ -29,6 +29,8 @@
 bool quit;
 cRenderer* renderer;
 
+#define DEFAULT_LOG "log"
+
 void shutdown() 
 {
 	delete(renderer);
@@ -43,6 +45,7 @@ int main(int argc, char *argv[])
 {
 	// Test, whether directory "$HOME/.renderer" exists
 	char* home=getenv("HOME");
+	char* logfile = 0;
 	char pfad_to_renderer[100];
 	sprintf(pfad_to_renderer,"%s/.renderer",home);
 	DIR* dir=opendir(pfad_to_renderer);
@@ -86,9 +89,15 @@ int main(int argc, char *argv[])
 				cout << "\t-a <ip_addr> : \tset the ip address" << endl;
 				cout << "\t-f           : \tenable fullscreen" << endl;
 				cout << "\t-d           : \texecute as daemon" << endl;
+				cout << "\t-l <logfile> : \tuse <logfile> for logging" << endl;
 				cout << "\t-v           : \tshow the version" << endl;
 				exit(0);
-			}else
+			}
+			else if(strcmp(optionName, "-l") == 0){
+				logfile = argv[i+1];
+				i++;
+			}
+			else
 			{
 				// print usage
 				cout << "usage: " << endl;
@@ -98,10 +107,16 @@ int main(int argc, char *argv[])
 				cout << "\t-a <ip_addr> : \tset the ip address" << endl;
 				cout << "\t-f           : \tenable fullscreen" << endl;
 				cout << "\t-d           : \texecute as daemon" << endl;
+				cout << "\t-l <logfile> : \tuse <logfile> for logging" << endl;
 				cout << "\t-v           : \tshow the version" << endl;
 				exit(0);
 			}
 		}
+	}
+
+	if(logfile  == 0){
+		logfile = new char[strlen(DEFAULT_LOG) + strlen(home) + strlen(".renderer/") + 3];
+		sprintf(logfile, "%s/.renderer/%s", home, DEFAULT_LOG);
 	}
 
 	if(isdaemon)
@@ -115,11 +130,9 @@ int main(int argc, char *argv[])
 		}else if(daemonpid==0)
 		{
 			int daemonfd;
-			char pfad_to_logfile[100];
-			sprintf(pfad_to_logfile,"%s/.renderer/log",home);
-			FILE* file=fopen(pfad_to_logfile,"w");
+			FILE* file=fopen(logfile,"w");
 			fclose(file);
-			daemonfd=open(pfad_to_logfile,O_WRONLY,O_CREAT);
+			daemonfd=open(logfile,O_WRONLY,O_CREAT);
 			if(dup2(daemonfd, 1) == -1  &&  close(daemonfd) == -1)
 			{
 				perror("dup2");
