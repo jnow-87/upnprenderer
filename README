@@ -1,3 +1,4 @@
 prerequisite
 
 	libupnp, libupnp-dev, uuid-dev, libuuid1
+	mplayer
